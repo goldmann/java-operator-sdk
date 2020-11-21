@@ -1,16 +1,20 @@
 package io.javaoperatorsdk.operator;
 
-import io.javaoperatorsdk.operator.api.Controller;
-import io.javaoperatorsdk.operator.api.ResourceController;
+import java.util.HashMap;
+import java.util.Map;
+
 import io.fabric8.kubernetes.api.builder.Function;
 import io.fabric8.kubernetes.client.CustomResource;
 import io.fabric8.kubernetes.client.CustomResourceDoneable;
-import javassist.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.HashMap;
-import java.util.Map;
+import io.javaoperatorsdk.operator.api.Controller;
+import io.javaoperatorsdk.operator.api.ResourceController;
+import javassist.CannotCompileException;
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.CtConstructor;
+import javassist.CtNewConstructor;
+import javassist.LoaderClassPath;
+import javassist.NotFoundException;
 
 
 public class ControllerUtils {
@@ -28,8 +32,7 @@ public class ControllerUtils {
         if (!Controller.NULL.equals(annotationFinalizerName)) {
             return annotationFinalizerName;
         }
-        final String crdName = getAnnotation(controller).crdName() + FINALIZER_NAME_SUFFIX;
-        return crdName;
+        return controller.getClass().getCanonicalName() + FINALIZER_NAME_SUFFIX;
     }
 
     static boolean getGenerationEventProcessing(ResourceController controller) {
