@@ -9,25 +9,30 @@ import java.util.Map;
 
 
 public class ControllerUtils {
-
+    
+    
     private static final String FINALIZER_NAME_SUFFIX = "/finalizer";
+    
     public static final String CONTROLLERS_RESOURCE_PATH = "javaoperatorsdk/controllers";
     private static Map<Class<? extends ResourceController>, Class<? extends CustomResource>> controllerToCustomResourceMappings;
-
-    static {
+        static {
         controllerToCustomResourceMappings =
                 ControllerToCustomResourceMappingsProvider
                         .provide(CONTROLLERS_RESOURCE_PATH);
     }
-
+    
+    public static String getDefaultFinalizerName(String crdName) {
+        return crdName + FINALIZER_NAME_SUFFIX;
+    }
+    
     static String getFinalizer(ResourceController controller) {
         final String annotationFinalizerName = getAnnotation(controller).finalizerName();
         if (!Controller.NULL.equals(annotationFinalizerName)) {
             return annotationFinalizerName;
         }
-        return getAnnotation(controller).crdName() + FINALIZER_NAME_SUFFIX;
+        return getDefaultFinalizerName(getAnnotation(controller).crdName());
     }
-
+    
     static boolean getGenerationEventProcessing(ResourceController<?> controller) {
         return getAnnotation(controller).generationAwareEventProcessing();
     }
