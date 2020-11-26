@@ -10,7 +10,6 @@ import java.util.Map;
 
 public class ControllerUtils {
     
-    
     private static final String FINALIZER_NAME_SUFFIX = "/finalizer";
     
     public static final String CONTROLLERS_RESOURCE_PATH = "javaoperatorsdk/controllers";
@@ -23,18 +22,6 @@ public class ControllerUtils {
     
     public static String getDefaultFinalizerName(String crdName) {
         return crdName + FINALIZER_NAME_SUFFIX;
-    }
-    
-    static String getFinalizer(ResourceController controller) {
-        final String annotationFinalizerName = getAnnotation(controller).finalizerName();
-        if (!Controller.NULL.equals(annotationFinalizerName)) {
-            return annotationFinalizerName;
-        }
-        return getDefaultFinalizerName(getAnnotation(controller).crdName());
-    }
-    
-    static boolean getGenerationEventProcessing(ResourceController<?> controller) {
-        return getAnnotation(controller).generationAwareEventProcessing();
     }
 
     static <R extends CustomResource> Class<R> getCustomResourceClass(ResourceController<R> controller) {
@@ -51,10 +38,7 @@ public class ControllerUtils {
         return (Class<R>) customResourceClass;
     }
 
-    static String getCrdName(ResourceController controller) {
-        return getAnnotation(controller).crdName();
-    }
-
+    
 
     public static <T extends CustomResource> Class<? extends CustomResourceDoneable<T>>
     getCustomResourceDoneableClass(ResourceController<T> controller) {

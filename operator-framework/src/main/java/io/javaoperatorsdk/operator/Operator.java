@@ -1,10 +1,9 @@
 package io.javaoperatorsdk.operator;
 
-import io.javaoperatorsdk.operator.api.ResourceController;
-import io.javaoperatorsdk.operator.processing.EventDispatcher;
-import io.javaoperatorsdk.operator.processing.EventScheduler;
-import io.javaoperatorsdk.operator.processing.retry.GenericRetry;
-import io.javaoperatorsdk.operator.processing.retry.Retry;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
 import io.fabric8.kubernetes.api.model.apiextensions.v1beta1.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.CustomResource;
 import io.fabric8.kubernetes.client.CustomResourceDoneable;
@@ -14,12 +13,13 @@ import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import io.fabric8.kubernetes.client.dsl.internal.CustomResourceOperationsImpl;
 import io.fabric8.kubernetes.internal.KubernetesDeserializer;
+import io.javaoperatorsdk.operator.api.ResourceController;
+import io.javaoperatorsdk.operator.processing.EventDispatcher;
+import io.javaoperatorsdk.operator.processing.EventScheduler;
+import io.javaoperatorsdk.operator.processing.retry.GenericRetry;
+import io.javaoperatorsdk.operator.processing.retry.Retry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 @SuppressWarnings("rawtypes")
 public class Operator {
@@ -52,13 +52,13 @@ public class Operator {
     @SuppressWarnings("rawtypes")
     private <R extends CustomResource> void registerController(ResourceController<R> controller,
                                                                boolean watchAllNamespaces, Retry retry, String... targetNamespaces) throws OperatorException {
-        Class<R> resClass = ControllerUtils.getCustomResourceClass(controller);
+        final var configuration = controller.getConfiguration();
+        Class<R> resClass = configuration.getCustomResourceClass();
         CustomResourceDefinitionContext crd = getCustomResourceDefinitionForController(controller);
         KubernetesDeserializer.registerCustomKind(crd.getVersion(), crd.getKind(), resClass);
-        String finalizer = ControllerUtils.getFinalizer(controller);
+        String finalizer = configuration.getFinalizer();
         MixedOperation client = k8sClient.customResources(crd, resClass, CustomResourceList.class, ControllerUtils.getCustomResourceDoneableClass(controller));
-        EventDispatcher eventDispatcher = new EventDispatcher(controller,
-                finalizer, new EventDispatcher.CustomResourceFacade(client), ControllerUtils.getGenerationEventProcessing(controller));
+        EventDispatcher eventDispatcher = new EventDispatcher(controller, finalizer, new EventDispatcher.CustomResourceFacade(client), configuration.isGenerationAware());
         EventScheduler eventScheduler = new EventScheduler(eventDispatcher, retry);
         registerWatches(controller, client, resClass, watchAllNamespaces, targetNamespaces, eventScheduler);
     }
@@ -85,7 +85,7 @@ public class Operator {
     }
 
     private CustomResourceDefinitionContext getCustomResourceDefinitionForController(ResourceController controller) {
-        String crdName = ControllerUtils.getCrdName(controller);
+        final var crdName = controller.getConfiguration().getCRDName();
         CustomResourceDefinition customResourceDefinition = k8sClient.customResourceDefinitions().withName(crdName).get();
         if (customResourceDefinition == null) {
             throw new OperatorException("Cannot find Custom Resource Definition with name: " + crdName);
