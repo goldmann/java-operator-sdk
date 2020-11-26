@@ -16,7 +16,7 @@ public interface ResourceController<R extends CustomResource> {
      * false if you don't want to remove the finalizer. Note that this is ALMOST NEVER the case.
      */
     boolean deleteResource(R resource, Context<R> context);
-
+    
     /**
      * The implementation of this operation is required to be idempotent.
      *
@@ -27,4 +27,8 @@ public interface ResourceController<R extends CustomResource> {
      * <b>However we will always call an update if there is no finalizer on object and its not marked for deletion.</b>
      */
     UpdateControl<R> createOrUpdateResource(R resource, Context<R> context);
+    
+    default ControllerConfiguration<R> getConfiguration() {
+        return new DefaultConfiguration<>(this);
+    }
 }
