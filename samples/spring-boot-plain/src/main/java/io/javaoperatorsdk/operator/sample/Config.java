@@ -1,14 +1,15 @@
 package io.javaoperatorsdk.operator.sample;
 
-import io.javaoperatorsdk.operator.Operator;
-import io.javaoperatorsdk.operator.api.ResourceController;
-import io.javaoperatorsdk.operator.processing.retry.GenericRetry;
+import java.util.List;
+
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.javaoperatorsdk.operator.Operator;
+import io.javaoperatorsdk.operator.api.ResourceController;
+import io.javaoperatorsdk.operator.config.DefaultConfigurationService;
+import io.javaoperatorsdk.operator.processing.retry.GenericRetry;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.List;
 
 @Configuration
 public class Config {
@@ -26,7 +27,7 @@ public class Config {
     //  Register all controller beans
     @Bean
     public Operator operator(KubernetesClient client, List<ResourceController> controllers) {
-        Operator operator = new Operator(client);
+        Operator operator = new Operator(client, DefaultConfigurationService.instance());
         controllers.forEach(c -> operator.registerControllerForAllNamespaces(c,
                 GenericRetry.defaultLimitedExponentialRetry()));
         return operator;

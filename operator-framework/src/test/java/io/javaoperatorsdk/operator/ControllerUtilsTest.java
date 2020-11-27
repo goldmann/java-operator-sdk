@@ -5,6 +5,7 @@ import io.javaoperatorsdk.operator.api.Context;
 import io.javaoperatorsdk.operator.api.Controller;
 import io.javaoperatorsdk.operator.api.ResourceController;
 import io.javaoperatorsdk.operator.api.UpdateControl;
+import io.javaoperatorsdk.operator.config.DefaultConfigurationService;
 import io.javaoperatorsdk.operator.sample.TestCustomResource;
 import io.javaoperatorsdk.operator.sample.TestCustomResourceController;
 import org.junit.jupiter.api.Test;
@@ -20,7 +21,7 @@ class ControllerUtilsTest {
     @Test
     public void returnsValuesFromControllerAnnotationFinalizer() {
         final var controller = new TestCustomResourceController(null);
-        final var configuration = controller.getConfiguration();
+        final var configuration = DefaultConfigurationService.instance().getConfigurationFor(controller);
         assertEquals(TestCustomResourceController.CRD_NAME, configuration.getCRDName());
         assertEquals(ControllerUtils.getDefaultFinalizerName(configuration.getCRDName()), configuration.getFinalizer());
         assertEquals(TestCustomResource.class, configuration.getCustomResourceClass());
@@ -44,6 +45,8 @@ class ControllerUtilsTest {
 
     @Test
     public void returnCustomerFinalizerNameIfSet() {
-        assertEquals(CUSTOM_FINALIZER_NAME, new TestCustomFinalizerController().getConfiguration().getFinalizer());
+        final var controller = new TestCustomFinalizerController();
+        final var configuration = DefaultConfigurationService.instance().getConfigurationFor(controller);
+        assertEquals(CUSTOM_FINALIZER_NAME, configuration.getFinalizer());
     }
 }

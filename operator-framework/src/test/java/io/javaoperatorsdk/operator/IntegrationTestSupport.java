@@ -17,6 +17,7 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.javaoperatorsdk.operator.api.ResourceController;
+import io.javaoperatorsdk.operator.config.DefaultConfigurationService;
 import io.javaoperatorsdk.operator.sample.TestCustomResource;
 import io.javaoperatorsdk.operator.sample.TestCustomResourceSpec;
 import org.slf4j.Logger;
@@ -43,15 +44,17 @@ public class IntegrationTestSupport {
         CustomResourceDefinitionContext crdContext = CustomResourceDefinitionContext.fromCrd(crd);
         this.controller = controller;
     
+        final var configurationService = DefaultConfigurationService.instance();
+    
         Class doneableClass = ControllerUtils.getCustomResourceDoneableClass(controller);
-        Class customResourceClass = controller.getConfiguration().getCustomResourceClass();
+        Class customResourceClass = configurationService.getConfigurationFor(controller).getCustomResourceClass();
         crOperations = k8sClient.customResources(crdContext, customResourceClass, CustomResourceList.class, doneableClass);
-
+    
         if (k8sClient.namespaces().withName(TEST_NAMESPACE).get() == null) {
             k8sClient.namespaces().create(new NamespaceBuilder()
-                    .withMetadata(new ObjectMetaBuilder().withName(TEST_NAMESPACE).build()).build());
+                .withMetadata(new ObjectMetaBuilder().withName(TEST_NAMESPACE).build()).build());
         }
-        operator = new Operator(k8sClient);
+        operator = new Operator(k8sClient, configurationService);
         operator.registerController(controller, TEST_NAMESPACE);
         log.info("Operator is running with {}", controller.getClass().getCanonicalName());
     }
